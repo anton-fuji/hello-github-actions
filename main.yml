@@ -1,17 +1,32 @@
-# ワークフロー名を定義します。
-name: Hello GitHub Actions
-# トリガーとなるイベントを定義します。(mainブランチへのpush)
-on:
-  push:
-		branches:
-      - 'main'
-# ジョブを追加します。(最新バージョンのUbuntu上でビルドを実行します。)
+name: Publish Python distributions to TestPyPI
+
+on: push
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Run a one-line script
-        run: echo Hello GitHub Actions!!
+  build-n-publish:
+    name: Build and publish Python distributions to TestPyPI
+	  runs-on: ubuntu-latest
+		steps:
+    - uses: actions/checkout@master
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+		- name: Install pypa/build
+      run: >-
+        python -m
+        pip install
+        build
+        --user
+    - name: Build a binary wheel and a source tarball
+      run: >-
+        python -m
+        build
+        --sdist
+        --wheel
+        --outdir dist/
+		- name: Publish distribution to Test PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        password: ${{ secrets.TESTPYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
